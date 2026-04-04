@@ -14,7 +14,6 @@ endmacro()
 
 set_from_environment(Fallout4Path)
 set_from_environment(VCPKG_ROOT)
-set_from_environment(CommonLibF4Path)
 
 if (DEFINED VCPKG_ROOT)
 	set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
@@ -75,19 +74,9 @@ set(Boost_USE_STATIC_LIBS ON)
 
 # ---- Dependencies ----
 
-if (DEFINED CommonLibF4Path AND NOT ${CommonLibF4Path} STREQUAL "" AND IS_DIRECTORY ${CommonLibF4Path})
-	add_subdirectory(${CommonLibF4Path} CommonLibF4)
-else ()
-	message(
-		FATAL_ERROR
-		"Variable CommonLibF4Path is not set."
-	)
-endif ()
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../commonlibf4 CommonLibF4)
 
-find_path(SRELL_INCLUDE_DIRS "srell.hpp")
 find_path(CLIBUTIL_INCLUDE_DIRS "CLibUtil/string.hpp")
-
-find_package(spdlog REQUIRED CONFIG)
 
 # ---- Add source files ----
 
@@ -119,12 +108,6 @@ target_compile_definitions(
 		_UNICODE
 )
 
-target_compile_definitions(
-	CommonLibF4
-	PUBLIC
-		F4SE_SUPPORT_XBYAK
-)
-
 target_compile_features(
 	${PROJECT_NAME}
 	PRIVATE
@@ -143,7 +126,6 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		CommonLibF4::CommonLibF4
-		spdlog::spdlog
 )
 
 target_precompile_headers(

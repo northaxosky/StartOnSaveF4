@@ -5,14 +5,14 @@ struct Game
 	static void DoBeforeNewOrLoad()
 	{
 		using func_t = decltype(&DoBeforeNewOrLoad);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(17,2228951) };
+		static REL::Relocation<func_t> func{ REL::ID{ 17, 2228951 } };
 		return func();
 	}
 
 	static void StartNewGame(RE::MainMenu* a_menu)
 	{
 		using func_t = decltype(&StartNewGame);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(719179,2249317) };
+		static REL::Relocation<func_t> func{ REL::ID{ 719179, 2249317 } };
 		return func(a_menu);
 	}
 };
@@ -106,7 +106,7 @@ void Settings::TryAutoLoadGame()
 			};
 
 			if (type < 5) {
-				for (auto& save : list | std::views::reverse) {  // the most recent save is stored at back
+				for (auto& save : list | std::views::reverse) {
 					if (get_valid_save(save)) {
 						break;
 					}
@@ -123,10 +123,13 @@ void Settings::TryAutoLoadGame()
 		if (lastGame) {
 			F4SE::GetTaskInterface()->AddTask([lastGame, manager, this]() {
 				Game::DoBeforeNewOrLoad();
-				static REL::Relocation<bool*> gameSystemsShouldUpdate{ RELOCATION_ID(779552,2698031) };
+				static REL::Relocation<bool*> gameSystemsShouldUpdate{ REL::ID{ 779552, 2698031 } };
 				*gameSystemsShouldUpdate = true;
-				if (!manager->LoadGame(lastGame->fileName, -1, 0, true, disableWarning)) {
-					logger::info("Failed to load {}", lastGame->fileName);
+				manager->queuedEntryToLoad = lastGame;
+				if (disableWarning) {
+					manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
+				} else {
+					manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
 				}
 			});
 		}
