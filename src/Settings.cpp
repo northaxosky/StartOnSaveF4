@@ -65,73 +65,88 @@ void Settings::LoadSettings()
 void Settings::TryAutoLoadGame()
 {
 	if (CheckKeyPress()) {
+		REX::INFO("skip hotkey held, aborting auto-load");
 		return;
 	}
 
-	if (const auto manager = RE::BGSSaveLoadManager::GetSingleton(); manager) {
-		if (!manager->isSaveListBuilt) {
-			manager->BuildSaveGameList(manager->displayPlayerID);
-		}
+	const auto manager = RE::BGSSaveLoadManager::GetSingleton();
+	if (!manager) {
+		REX::INFO("BGSSaveLoadManager not available");
+		return;
+	}
 
-		const auto& list = manager->saveGameList;
-		if (list.empty()) {
-			if (startNewGame) {
-				if (auto mainMenu = RE::UI::GetSingleton()->GetMenu<RE::MainMenu>()) {
-					Game::StartNewGame(mainMenu.get());
-				}
-			}
-			return;
-		}
+	if (!manager->isSaveListBuilt) {
+		manager->BuildSaveGameList(manager->displayPlayerID);
+	}
 
-		RE::BGSSaveLoadFileEntry* lastGame = nullptr;
+	const auto& list = manager->saveGameList;
+	REX::INFO("save list has {} entries", list.size());
 
-		if (useSpecificSave) {
-			if (const auto result = std::ranges::find_if(list, [&](const auto& save) {
-					return specificSave == save->fileName;
-				});
-				result != list.end()) {
-				lastGame = *result;
+	if (list.empty()) {
+		if (startNewGame) {
+			if (auto mainMenu = RE::UI::GetSingleton()->GetMenu<RE::MainMenu>()) {
+				REX::INFO("no saves found, starting new game");
+				Game::StartNewGame(mainMenu.get());
 			}
 		}
+		return;
+	}
 
-		if (!lastGame) {
-			const auto get_valid_save = [&](RE::BGSSaveLoadFileEntry* a_save, std::int32_t a_offset = 0) {
-				if (a_save && GetValidSave(a_save->fileName, a_offset)) {
-					if (!useCharName || string::iequals(a_save->playerName, charName)) {
-						lastGame = a_save;
-						return true;
-					}
-				}
-				return false;
-			};
+	std::int32_t saveIndex = -1;
 
-			if (type < 5) {
-				for (auto& save : list | std::views::reverse) {
-					if (get_valid_save(save)) {
-						break;
-					}
-				}
-			} else {
-				for (auto& save : list) {
-					if (get_valid_save(save, 5)) {
-						break;
-					}
-				}
+	if (useSpecificSave) {
+		for (std::int32_t i = 0; i < static_cast<std::int32_t>(list.size()); i++) {
+			if (specificSave == list[i]->fileName) {
+				saveIndex = i;
+				break;
 			}
-		}
-
-		if (lastGame) {
-			F4SE::GetTaskInterface()->AddTask([lastGame, manager, this]() {
-				Game::DoBeforeNewOrLoad();
-				static REL::Relocation<bool*> gameSystemsShouldUpdate{ REL::ID{ 779552, 2698031 } };
-				*gameSystemsShouldUpdate = true;
-				manager->queuedEntryToLoad = lastGame;
-				if (disableWarning) {
-					manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
-				} else {
-					manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
-				}
-			});
 		}
 	}
+
+	if (saveIndex < 0) {
+		const auto find_valid_save = [&](std::int32_t idx, std::int32_t a_offset = 0) {
+			auto* save = list[idx];
+			if (save && GetValidSave(save->fileName, a_offset)) {
+				if (!useCharName || string::iequals(save->playerName, charName)) {
+					saveIndex = idx;
+					return true;
+				}
+			}
+			return false;
+		};
+
+		if (type < 5) {
+			for (std::int32_t i = static_cast<std::int32_t>(list.size()) - 1; i >= 0; i--) {
+				if (find_valid_save(i)) {
+					break;
+				}
+			}
+		} else {
+			for (std::int32_t i = 0; i < static_cast<std::int32_t>(list.size()); i++) {
+				if (find_valid_save(i, 5)) {
+					break;
+				}
+			}
+		}
+	}
+
+	if (saveIndex < 0) {
+		REX::INFO("no matching save found");
+		return;
+	}
+
+	auto* lastGame = list[saveIndex];
+	REX::INFO("auto-loading save [{}]: {}", saveIndex, lastGame->fileName);
+
+	F4SE::GetTaskInterface()->AddTask([lastGame, manager, this]() {
+		Game::DoBeforeNewOrLoad();
+		static REL::Relocation<bool*> gameSystemsShouldUpdate{ REL::ID{ 779552, 2698031 } };
+		*gameSystemsShouldUpdate = true;
+		manager->queuedEntryToLoad = lastGame;
+		if (disableWarning) {
+			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
+		} else {
+			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
+		}
+	});
 }
