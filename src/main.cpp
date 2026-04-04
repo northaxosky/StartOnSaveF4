@@ -29,6 +29,19 @@ F4SEPluginVersion = []() noexcept {
 	return data;
 }();
 
+F4SE_EXPORT bool F4SEAPI F4SEPlugin_Query(const F4SE::QueryInterface* a_f4se, F4SE::PluginInfo* a_info)
+{
+	a_info->infoVersion = F4SE::PluginInfo::kVersion;
+	a_info->name = Version::PROJECT.data();
+	a_info->version = Version::MAJOR;
+
+	if (a_f4se->RuntimeVersion() < F4SE::RUNTIME_1_10_163) {
+		return false;
+	}
+
+	return true;
+}
+
 F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 {
 	F4SE::Init(a_f4se, {

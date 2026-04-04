@@ -14,6 +14,7 @@ endmacro()
 
 set_from_environment(Fallout4Path)
 set_from_environment(VCPKG_ROOT)
+set_from_environment(CommonLibF4Path)
 
 if (DEFINED VCPKG_ROOT)
 	set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
@@ -30,9 +31,12 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE 
 
 # ---- Project ----
 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" PROJECT_VER)
+string(STRIP "${PROJECT_VER}" PROJECT_VER)
+
 project(
 	po3_StartOnSaveF4
-	VERSION 1.0.0
+	VERSION ${PROJECT_VER}
 	LANGUAGES CXX
 )
 
@@ -74,7 +78,11 @@ set(Boost_USE_STATIC_LIBS ON)
 
 # ---- Dependencies ----
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../commonlibf4 CommonLibF4)
+if (DEFINED CommonLibF4Path AND NOT ${CommonLibF4Path} STREQUAL "" AND IS_DIRECTORY ${CommonLibF4Path})
+	add_subdirectory(${CommonLibF4Path} CommonLibF4)
+else ()
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../commonlibf4 CommonLibF4)
+endif ()
 
 find_path(CLIBUTIL_INCLUDE_DIRS "CLibUtil/string.hpp")
 
