@@ -76,6 +76,14 @@ void Settings::LoadSettings()
 	ini::get_value(ini, disableWarning, "Settings", "Disable Missing Content Warning", ";Disable warning messagebox when loading saves with missing mods.");
 
 	(void)ini.SaveFile(path);
+
+	REX::INFO("settings loaded:");
+	REX::INFO("  Save File = '{}'", specificSave);
+	REX::INFO("  Character Name = '{}'", charName);
+	REX::INFO("  Save Type = {}", type);
+	REX::INFO("  Skip AutoLoad Hotkey = {}", KEY);
+	REX::INFO("  Start New Game = {}", startNewGame);
+	REX::INFO("  Disable Missing Content Warning = {}", disableWarning);
 }
 
 void Settings::TryAutoLoadGame()
@@ -155,13 +163,16 @@ void Settings::TryAutoLoadGame()
 	REX::INFO("auto-loading save [{}]: {}", saveIndex, lastGame->fileName);
 
 	F4SE::GetTaskInterface()->AddTask([lastGame, manager, this]() {
+		REX::INFO("executing load task");
 		Game::DoBeforeNewOrLoad();
 		static REL::Relocation<bool*> gameSystemsShouldUpdate{ REL::ID{ 779552, 2698031 } };
 		*gameSystemsShouldUpdate = true;
 		manager->queuedEntryToLoad = lastGame;
 		if (disableWarning) {
+			REX::INFO("queuing kMissingContentLoad");
 			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
 		} else {
+			REX::INFO("queuing kLoadGame");
 			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
 		}
 	});
