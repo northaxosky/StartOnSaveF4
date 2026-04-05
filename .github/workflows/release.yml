@@ -51,6 +51,7 @@ jobs:
           mkdir -p staging/F4SE/Plugins
           cp build/${{ env.BUILD_TYPE }}/po3_StartOnSaveF4.dll staging/F4SE/Plugins/
           cp build/${{ env.BUILD_TYPE }}/po3_StartOnSaveF4.pdb staging/F4SE/Plugins/
+          cp contrib/po3_StartOnSave.ini staging/F4SE/Plugins/
           cd staging
           7z a -tzip "../StartOnSaveF4_v${{ steps.version.outputs.version }}.zip" F4SE/
 

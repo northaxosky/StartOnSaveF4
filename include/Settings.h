@@ -17,6 +17,8 @@ public:
 
 	void TryAutoLoadGame();
 
+	static bool ReadEnableLogging();
+
 	// members
 	std::string specificSave{};
 	bool useSpecificSave{ false };

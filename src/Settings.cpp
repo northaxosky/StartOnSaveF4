@@ -39,6 +39,22 @@ bool Settings::GetValidSave(const RE::BSFixedString& a_name, std::int32_t a_offs
 	       type == (4 + a_offset) && string::icontains(a_name, "ExitSave");
 }
 
+bool Settings::ReadEnableLogging()
+{
+	constexpr auto path = L"Data/F4SE/Plugins/po3_StartOnSave.ini";
+
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	ini.LoadFile(path);
+
+	bool enableLogging = true;
+	ini::get_value(ini, enableLogging, "Settings", "Enable Logging", ";Enable debug logging to Documents/My Games/Fallout4/F4SE/po3_StartOnSaveF4.log");
+
+	(void)ini.SaveFile(path);
+
+	return enableLogging;
+}
+
 void Settings::LoadSettings()
 {
 	constexpr auto path = L"Data/F4SE/Plugins/po3_StartOnSave.ini";
