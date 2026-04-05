@@ -112,6 +112,8 @@ void Settings::TryAutoLoadGame()
 				REX::INFO("no saves found, starting new game");
 				Game::StartNewGame(mainMenu.get());
 			}
+		} else {
+			REX::INFO("no saves found and Start New Game is disabled");
 		}
 		return;
 	}
