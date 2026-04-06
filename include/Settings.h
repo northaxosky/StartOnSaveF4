@@ -16,6 +16,7 @@ public:
 	void LoadSettings();
 
 	void TryAutoLoadGame();
+	void QueueLoad(RE::BGSSaveLoadFileEntry* a_save, RE::BGSSaveLoadManager* a_manager);
 
 	static bool ReadEnableLogging();
 

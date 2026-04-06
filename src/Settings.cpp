@@ -164,18 +164,29 @@ void Settings::TryAutoLoadGame()
 	auto* lastGame = list[saveIndex];
 	REX::INFO("auto-loading save [{}]: {}", saveIndex, lastGame->fileName);
 
-	F4SE::GetTaskInterface()->AddTask([lastGame, manager, this]() {
+	QueueLoad(lastGame, manager);
+}
+
+void Settings::QueueLoad(RE::BGSSaveLoadFileEntry* a_save, RE::BGSSaveLoadManager* a_manager)
+{
+	F4SE::GetTaskInterface()->AddTask([a_save, a_manager, this]() {
+		if (a_manager->queuedTasks != 0) {
+			REX::INFO("waiting for save manager (queuedTasks=0x{:X})", a_manager->queuedTasks);
+			QueueLoad(a_save, a_manager);
+			return;
+		}
+
 		REX::INFO("executing load task");
 		Game::DoBeforeNewOrLoad();
 		static REL::Relocation<bool*> gameSystemsShouldUpdate{ REL::ID{ 779552, 2698031 } };
 		*gameSystemsShouldUpdate = true;
-		manager->queuedEntryToLoad = lastGame;
+		a_manager->queuedEntryToLoad = a_save;
 		if (disableWarning) {
 			REX::INFO("queuing kMissingContentLoad");
-			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
+			a_manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kMissingContentLoad);
 		} else {
 			REX::INFO("queuing kLoadGame");
-			manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
+			a_manager->QueueSaveLoadTask(RE::BGSSaveLoadManager::QUEUED_TASK::kLoadGame);
 		}
 	});
 }
