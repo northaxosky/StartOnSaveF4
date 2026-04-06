@@ -25,6 +25,11 @@ All settings are in `po3_StartOnSave.ini`:
 | Skip AutoLoad Hotkey | 16 | Virtual key code to skip auto-load (default: SHIFT). |
 | Start New Game | true | Start a new game if no saves exist. |
 | Disable Missing Content Warning | false | Suppress the missing mods warning on load. |
+| Enable Logging | true | Write debug log to `Documents/My Games/Fallout4/F4SE/po3_StartOnSaveF4.log`. |
+
+## Notes
+
+If you have a large number of save files, the game may take extra time to finish loading at the main menu before the auto-load triggers. The mod waits for the game's save manager to finish its background work before queuing the load, so there may be a brief delay at the main menu. This is normal.
 
 ## Building
 
